@@ -4,6 +4,7 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.JacksonJavaTypeMapper;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ public class RabbitMQConfig {
 
     // ─── Exchange ────────────────────────────────────────────────────────────
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
+    public static final String TRIP_EXCHANGE = "trip.exchange";
 
     // ─── Queues ──────────────────────────────────────────────────────────────
     public static final String TRIP_PRICED_QUEUE = "trip-priced-queue";
@@ -29,6 +31,11 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange paymentExchange() {
         return new TopicExchange(PAYMENT_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public DirectExchange tripExchange() {
+        return new DirectExchange(TRIP_EXCHANGE, true, false);
     }
 
     // ─── Dead Letter Queue & Binding ─────────────────────────────────────────
@@ -56,14 +63,17 @@ public class RabbitMQConfig {
     @Bean
     public Binding tripPricedBinding() {
         return BindingBuilder.bind(tripPricedQueue())
-                .to(paymentExchange())
+                .to(tripExchange())
                 .with(ROUTING_TRIP_PRICED);
     }
 
     // ─── JSON Message Converter ───────────────────────────────────────────────
     @Bean
     public MessageConverter jsonMessageConverter() {
-        return new JacksonJsonMessageConverter();
+        JacksonJsonMessageConverter converter = new JacksonJsonMessageConverter();
+        // Ignore __TypeId__ header, infer type from method signature logic
+        converter.setTypePrecedence(JacksonJavaTypeMapper.TypePrecedence.INFERRED);
+        return converter;
     }
 
     @Bean
