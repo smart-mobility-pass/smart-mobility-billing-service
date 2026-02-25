@@ -5,9 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-/*** @EnableScheduling allows us to use @Scheduled annotations for periodic tasks,
- * such as resetting daily spent amounts at midnight.
- */
 @EnableScheduling
 public class SmartMobilityBillingServiceApplication {
 
