@@ -95,6 +95,8 @@ public class BillingService {
         saveTransaction(account.getId(), null, amount, TransactionType.CREDIT,
                 TransactionStatus.SUCCESS, description != null ? description : "Account top-up");
 
+        eventPublisher.publishAccountCredited(userId, amount);
+
         log.info("Top-up of {} credited to userId={}. New balance={}", amount, userId, account.getBalance());
         return toResponse(account);
     }
