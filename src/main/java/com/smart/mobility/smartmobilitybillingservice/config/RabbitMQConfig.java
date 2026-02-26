@@ -16,6 +16,7 @@ public class RabbitMQConfig {
     // ─── Exchange ────────────────────────────────────────────────────────────
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
     public static final String TRIP_EXCHANGE = "trip.exchange";
+    public static final String ACCOUNT_EXCHANGE = "account.exchange";
 
     // ─── Queues ──────────────────────────────────────────────────────────────
     public static final String TRIP_PRICED_QUEUE = "trip-priced-queue";
@@ -25,12 +26,18 @@ public class RabbitMQConfig {
     public static final String ROUTING_TRIP_PRICED = "trip.priced";
     public static final String ROUTING_PAYMENT_COMPLETED = "payment.completed";
     public static final String ROUTING_PAYMENT_FAILED = "payment.failed";
+    public static final String ROUTING_ACCOUNT_CREDITED = "account.credited";
     public static final String ROUTING_DLQ = "trip.priced.dlq";
 
     // ─── Exchange Bean ───────────────────────────────────────────────────────
     @Bean
     public TopicExchange paymentExchange() {
         return new TopicExchange(PAYMENT_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public TopicExchange accountExchange() {
+        return new TopicExchange(ACCOUNT_EXCHANGE, true, false);
     }
 
     @Bean
