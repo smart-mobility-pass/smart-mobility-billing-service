@@ -18,7 +18,7 @@ public class PaymentEventPublisher {
 
         private final RabbitTemplate rabbitTemplate;
 
-        public void publishPaymentCompleted(String tripId, Long userId, BigDecimal amount) {
+        public void publishPaymentCompleted(String tripId, String userId, BigDecimal amount) {
                 PaymentEvent event = new PaymentEvent(
                                 tripId, userId, amount, "COMPLETED", null, LocalDateTime.now());
                 log.info("Publishing PAYMENT_COMPLETED for tripId={}", tripId);
@@ -28,7 +28,7 @@ public class PaymentEventPublisher {
                                 event);
         }
 
-        public void publishPaymentFailed(String tripId, Long userId, BigDecimal amount, String reason) {
+        public void publishPaymentFailed(String tripId, String userId, BigDecimal amount, String reason) {
                 PaymentEvent event = new PaymentEvent(
                                 tripId, userId, amount, "FAILED", reason, LocalDateTime.now());
                 log.warn("Publishing PAYMENT_FAILED for tripId={}, reason={}", tripId, reason);
@@ -38,7 +38,7 @@ public class PaymentEventPublisher {
                                 event);
         }
 
-        public void publishAccountCredited(Long userId, BigDecimal amount) {
+        public void publishAccountCredited(String userId, BigDecimal amount) {
                 AccountCreditedEvent event = new AccountCreditedEvent(userId, amount, LocalDateTime.now());
                 log.info("Publishing ACCOUNT_CREDITED for userId={}, amount={}", userId, amount);
                 rabbitTemplate.convertAndSend(

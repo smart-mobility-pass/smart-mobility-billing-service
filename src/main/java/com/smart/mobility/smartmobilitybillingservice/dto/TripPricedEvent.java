@@ -6,7 +6,7 @@ import java.math.BigDecimal;
  * Payload received from the TRIP_PRICED RabbitMQ event.
  */
 public record TripPricedEvent(
-        String tripId,
-        Long userId,
-        BigDecimal finalAmount) {
+                String tripId,
+                String userId,
+                BigDecimal finalAmount) {
 }

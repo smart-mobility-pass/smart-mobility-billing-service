@@ -23,7 +23,7 @@ public class Account {
 
     /** Unique identifier of the user owning this account. */
     @Column(nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     /** Current balance. Must never be negative. */
     @Column(nullable = false, precision = 19, scale = 2)

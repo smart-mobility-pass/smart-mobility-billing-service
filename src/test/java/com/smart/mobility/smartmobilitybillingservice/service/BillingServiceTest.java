@@ -51,7 +51,7 @@ class BillingServiceTest {
     @Test
     @DisplayName("createAccount: creates account with XOF currency and zero balance")
     void createAccount_success() {
-        Long userId = 1L;
+        String userId = "user-1";
         when(accountRepository.existsByUserId(userId)).thenReturn(false);
         when(accountRepository.save(any())).thenAnswer(inv -> {
             Account a = inv.getArgument(0);
@@ -73,7 +73,7 @@ class BillingServiceTest {
     @Test
     @DisplayName("topUp: correctly adds amount to balance")
     void topUp_success() {
-        Long userId = 1L;
+        String userId = "user-1";
         Account account = buildAccount(userId, "500.00", "0.00");
         when(accountRepository.findByUserId(userId)).thenReturn(Optional.of(account));
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -91,7 +91,7 @@ class BillingServiceTest {
     @Test
     @DisplayName("processDebit: debits account and publishes PAYMENT_COMPLETED")
     void processDebit_success() {
-        Long userId = 2L;
+        String userId = "user-2";
         String tripId = "TRIP-001";
         Account account = buildAccount(userId, "10000.00", "0.00");
 
@@ -114,7 +114,7 @@ class BillingServiceTest {
     @Test
     @DisplayName("processDebit: records FAILED transaction when balance is insufficient")
     void processDebit_insufficientBalance() {
-        Long userId = 3L;
+        String userId = "user-3";
         String tripId = "TRIP-002";
         Account account = buildAccount(userId, "100.00", "0.00"); // only 100 XOF
 
@@ -136,7 +136,7 @@ class BillingServiceTest {
     @Test
     @DisplayName("processDebit: amount is trimmed to daily cap remainder")
     void processDebit_dailyCapTrims() {
-        Long userId = 4L;
+        String userId = "user-4";
         String tripId = "TRIP-003";
         // Already spent 49000, cap is 50000 → only 1000 remaining
         Account account = buildAccount(userId, "30000.00", "49000.00");
@@ -157,7 +157,7 @@ class BillingServiceTest {
     @Test
     @DisplayName("processDebit: FAILED when daily cap is fully exhausted")
     void processDebit_dailyCapExhausted() {
-        Long userId = 5L;
+        String userId = "user-5";
         String tripId = "TRIP-004";
         Account account = buildAccount(userId, "30000.00", "50000.00"); // cap fully used
 
@@ -178,7 +178,7 @@ class BillingServiceTest {
     @DisplayName("processDebit: skips duplicate TRIP_PRICED events (idempotence)")
     void processDebit_idempotence() {
         String tripId = "TRIP-005";
-        Long userId = 6L;
+        String userId = "user-6";
         // Simulate that this tripId was already processed
         when(transactionRepository.findByTripId(tripId)).thenReturn(Optional.of(mock(Transaction.class)));
 
@@ -196,8 +196,8 @@ class BillingServiceTest {
     @Test
     @DisplayName("getAccountByUserId: throws AccountNotFoundException for unknown user")
     void getAccount_notFound() {
-        when(accountRepository.findByUserId(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> billingService.getAccountByUserId(99L))
+        when(accountRepository.findByUserId("user-99")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> billingService.getAccountByUserId("user-99"))
                 .isInstanceOf(AccountNotFoundException.class);
     }
 
@@ -205,9 +205,9 @@ class BillingServiceTest {
     // Helpers
     // ─────────────────────────────────────────────────────────────
 
-    private Account buildAccount(Long userId, String balance, String dailySpent) {
+    private Account buildAccount(String userId, String balance, String dailySpent) {
         return Account.builder()
-                .id(userId * 10)
+                .id((long) userId.hashCode())
                 .userId(userId)
                 .balance(new BigDecimal(balance))
                 .dailySpent(new BigDecimal(dailySpent))

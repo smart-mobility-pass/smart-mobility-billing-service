@@ -35,7 +35,7 @@ public class AccountController {
      * Retrieves the account details for a user.
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<AccountResponse> getAccount(@PathVariable Long userId) {
+    public ResponseEntity<AccountResponse> getAccount(@PathVariable String userId) {
         log.info("REST: Get account for userId={}", userId);
         return ResponseEntity.ok(billingService.getAccountByUserId(userId));
     }
@@ -46,7 +46,7 @@ public class AccountController {
      */
     @PostMapping("/{userId}/topup")
     public ResponseEntity<AccountResponse> topUp(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestBody TopUpRequest request) {
         log.info("REST: Top-up {} for userId={}", request.amount(), userId);
         AccountResponse response = billingService.topUp(userId, request.amount(), request.description());

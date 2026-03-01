@@ -83,7 +83,7 @@ public class BillingService {
      * @return updated account information
      */
     @Transactional
-    public AccountResponse topUp(Long userId, BigDecimal amount, String description) {
+    public AccountResponse topUp(String userId, BigDecimal amount, String description) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Top-up amount must be positive.");
         }
@@ -204,7 +204,7 @@ public class BillingService {
     // ─────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public AccountResponse getAccountByUserId(Long userId) {
+    public AccountResponse getAccountByUserId(String userId) {
         return toResponse(findAccountByUserId(userId));
     }
 
@@ -212,7 +212,7 @@ public class BillingService {
     // Private helpers
     // ─────────────────────────────────────────────────────────────
 
-    private Account findAccountByUserId(Long userId) {
+    private Account findAccountByUserId(String userId) {
         return accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new AccountNotFoundException(userId));
     }
