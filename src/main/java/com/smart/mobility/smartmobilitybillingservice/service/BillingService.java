@@ -2,6 +2,7 @@ package com.smart.mobility.smartmobilitybillingservice.service;
 
 import com.smart.mobility.smartmobilitybillingservice.dto.AccountResponse;
 import com.smart.mobility.smartmobilitybillingservice.dto.CreateAccountRequest;
+import com.smart.mobility.smartmobilitybillingservice.dto.DailySpentResponse;
 import com.smart.mobility.smartmobilitybillingservice.dto.TripPricedEvent;
 import com.smart.mobility.smartmobilitybillingservice.enums.TransactionStatus;
 import com.smart.mobility.smartmobilitybillingservice.enums.TransactionType;
@@ -206,6 +207,12 @@ public class BillingService {
     @Transactional(readOnly = true)
     public AccountResponse getAccountByUserId(String userId) {
         return toResponse(findAccountByUserId(userId));
+    }
+
+    @Transactional(readOnly = true)
+    public DailySpentResponse getDailySpent(String userId) {
+        Account account = findAccountByUserId(userId);
+        return new DailySpentResponse(userId, account.getDailySpent().doubleValue());
     }
 
     // ─────────────────────────────────────────────────────────────
