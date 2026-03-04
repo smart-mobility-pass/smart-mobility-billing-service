@@ -18,20 +18,21 @@ public class PaymentEventPublisher {
 
         private final RabbitTemplate rabbitTemplate;
 
-        public void publishPaymentCompleted(String tripId, String userId, BigDecimal amount) {
+        public void publishPaymentCompleted(String tripId, String userId, BigDecimal amount, boolean penalty) {
                 PaymentEvent event = new PaymentEvent(
-                                tripId, userId, amount, "COMPLETED", null, LocalDateTime.now());
-                log.info("Publishing PAYMENT_COMPLETED for tripId={}", tripId);
+                                tripId, userId, amount, "COMPLETED", null, LocalDateTime.now(), penalty);
+                log.info("Publishing PAYMENT_COMPLETED for tripId={}, penalty={}", tripId, penalty);
                 rabbitTemplate.convertAndSend(
                                 RabbitMQConfig.PAYMENT_EXCHANGE,
                                 RabbitMQConfig.ROUTING_PAYMENT_COMPLETED,
                                 event);
         }
 
-        public void publishPaymentFailed(String tripId, String userId, BigDecimal amount, String reason) {
+        public void publishPaymentFailed(String tripId, String userId, BigDecimal amount, String reason,
+                        boolean penalty) {
                 PaymentEvent event = new PaymentEvent(
-                                tripId, userId, amount, "FAILED", reason, LocalDateTime.now());
-                log.warn("Publishing PAYMENT_FAILED for tripId={}, reason={}", tripId, reason);
+                                tripId, userId, amount, "FAILED", reason, LocalDateTime.now(), penalty);
+                log.warn("Publishing PAYMENT_FAILED for tripId={}, reason={}, penalty={}", tripId, reason, penalty);
                 rabbitTemplate.convertAndSend(
                                 RabbitMQConfig.PAYMENT_EXCHANGE,
                                 RabbitMQConfig.ROUTING_PAYMENT_FAILED,
