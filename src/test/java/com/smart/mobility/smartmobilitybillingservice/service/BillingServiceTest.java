@@ -99,12 +99,12 @@ class BillingServiceTest {
         when(accountRepository.findByUserId(userId)).thenReturn(Optional.of(account));
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("500.00")));
+        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("500.00"), false));
 
         assertThat(account.getBalance()).isEqualByComparingTo(new BigDecimal("9500.00"));
         assertThat(account.getDailySpent()).isEqualByComparingTo(new BigDecimal("500.00"));
         verify(transactionRepository).save(argThat(tx -> tx.getStatus() == TransactionStatus.SUCCESS));
-        verify(eventPublisher).publishPaymentCompleted(eq(tripId), eq(userId), any());
+        verify(eventPublisher).publishPaymentCompleted(eq(tripId), eq(userId), any(), anyBoolean());
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -121,10 +121,10 @@ class BillingServiceTest {
         when(transactionRepository.findByTripId(tripId)).thenReturn(Optional.empty());
         when(accountRepository.findByUserId(userId)).thenReturn(Optional.of(account));
 
-        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("500.00")));
+        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("500.00"), false));
 
         verify(transactionRepository).save(argThat(tx -> tx.getStatus() == TransactionStatus.FAILED));
-        verify(eventPublisher).publishPaymentFailed(eq(tripId), eq(userId), any(), anyString());
+        verify(eventPublisher).publishPaymentFailed(eq(tripId), eq(userId), any(), anyString(), anyBoolean());
         // balance must be unchanged
         assertThat(account.getBalance()).isEqualByComparingTo(new BigDecimal("100.00"));
     }
@@ -145,13 +145,13 @@ class BillingServiceTest {
         when(accountRepository.findByUserId(userId)).thenReturn(Optional.of(account));
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("5000.00")));
+        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("5000.00"), false));
 
         // Only 1000 should be debited (cap remainder)
         assertThat(account.getBalance()).isEqualByComparingTo(new BigDecimal("29000.00"));
         assertThat(account.getDailySpent()).isEqualByComparingTo(new BigDecimal("50000.00"));
         verify(eventPublisher).publishPaymentCompleted(eq(tripId), eq(userId),
-                argThat(a -> a.compareTo(new BigDecimal("1000.00")) == 0));
+                argThat(a -> a.compareTo(new BigDecimal("1000.00")) == 0), anyBoolean());
     }
 
     @Test
@@ -164,10 +164,10 @@ class BillingServiceTest {
         when(transactionRepository.findByTripId(tripId)).thenReturn(Optional.empty());
         when(accountRepository.findByUserId(userId)).thenReturn(Optional.of(account));
 
-        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("100.00")));
+        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("100.00"), false));
 
         verify(transactionRepository).save(argThat(tx -> tx.getStatus() == TransactionStatus.FAILED));
-        verify(eventPublisher).publishPaymentFailed(eq(tripId), eq(userId), any(), anyString());
+        verify(eventPublisher).publishPaymentFailed(eq(tripId), eq(userId), any(), anyString(), anyBoolean());
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ class BillingServiceTest {
         // Simulate that this tripId was already processed
         when(transactionRepository.findByTripId(tripId)).thenReturn(Optional.of(mock(Transaction.class)));
 
-        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("200.00")));
+        billingService.processDebit(new TripPricedEvent(tripId, userId, new BigDecimal("200.00"), false));
 
         // Nothing else should have been called
         verifyNoInteractions(accountRepository);
