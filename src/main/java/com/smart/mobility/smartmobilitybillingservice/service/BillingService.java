@@ -140,11 +140,12 @@ public class BillingService {
             saveTransaction(null, event.tripId(), event.finalAmount(), TransactionType.DEBIT,
                     TransactionStatus.FAILED, "Account not found for userId: " + event.userId());
             eventPublisher.publishPaymentFailed(event.tripId(), event.userId(),
-                    event.finalAmount(), ex.getMessage());
+                    event.finalAmount(), ex.getMessage(), event.penalty());
             return;
         }
 
         BigDecimal amount = event.finalAmount();
+        boolean penalty = event.penalty();
 
         try {
             // ── Balance check ─────────────────────────────────────
@@ -170,9 +171,10 @@ public class BillingService {
             accountRepository.save(account);
 
             saveTransaction(account.getId(), event.tripId(), amount, TransactionType.DEBIT,
-                    TransactionStatus.SUCCESS, "Trip payment for tripId: " + event.tripId());
+                    TransactionStatus.SUCCESS,
+                    "Trip payment for tripId: " + event.tripId() + (penalty ? " (PENALTY)" : ""));
 
-            eventPublisher.publishPaymentCompleted(event.tripId(), event.userId(), amount);
+            eventPublisher.publishPaymentCompleted(event.tripId(), event.userId(), amount, penalty);
             log.info("Debit of {} for tripId={} succeeded. Remaining balance={}",
                     amount, event.tripId(), account.getBalance());
 
@@ -181,7 +183,7 @@ public class BillingService {
             saveTransaction(account.getId(), event.tripId(), event.finalAmount(), TransactionType.DEBIT,
                     TransactionStatus.FAILED, ex.getMessage());
             eventPublisher.publishPaymentFailed(event.tripId(), event.userId(),
-                    event.finalAmount(), ex.getMessage());
+                    event.finalAmount(), ex.getMessage(), penalty);
         }
     }
 
