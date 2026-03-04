@@ -217,6 +217,12 @@ public class BillingService {
         return new DailySpentResponse(userId, account.getDailySpent().doubleValue());
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<Transaction> getTransactionsByUserId(String userId) {
+        Account account = findAccountByUserId(userId);
+        return transactionRepository.findByAccountIdOrderByCreatedAtDesc(account.getId());
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Private helpers
     // ─────────────────────────────────────────────────────────────

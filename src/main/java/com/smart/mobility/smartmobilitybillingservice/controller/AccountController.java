@@ -40,10 +40,6 @@ public class AccountController {
         return ResponseEntity.ok(billingService.getAccountByUserId(userId));
     }
 
-    /**
-     * POST /accounts/{userId}/topup
-     * Credits the account with a positive amount.
-     */
     @PostMapping("/{userId}/topup")
     public ResponseEntity<AccountResponse> topUp(
             @PathVariable String userId,
@@ -51,5 +47,16 @@ public class AccountController {
         log.info("REST: Top-up {} for userId={}", request.amount(), userId);
         AccountResponse response = billingService.topUp(userId, request.amount(), request.description());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /accounts/{userId}/transactions
+     * Retrieves the transaction history for a user.
+     */
+    @GetMapping("/{userId}/transactions")
+    public ResponseEntity<java.util.List<com.smart.mobility.smartmobilitybillingservice.model.Transaction>> getTransactions(
+            @PathVariable String userId) {
+        log.info("REST: Get transactions for userId={}", userId);
+        return ResponseEntity.ok(billingService.getTransactionsByUserId(userId));
     }
 }
