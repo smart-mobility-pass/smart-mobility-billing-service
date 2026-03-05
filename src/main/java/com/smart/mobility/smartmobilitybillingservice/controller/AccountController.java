@@ -1,6 +1,7 @@
 package com.smart.mobility.smartmobilitybillingservice.controller;
 
 import com.smart.mobility.smartmobilitybillingservice.dto.AccountResponse;
+import com.smart.mobility.smartmobilitybillingservice.dto.ChargeRequest;
 import com.smart.mobility.smartmobilitybillingservice.dto.CreateAccountRequest;
 import com.smart.mobility.smartmobilitybillingservice.dto.TopUpRequest;
 import com.smart.mobility.smartmobilitybillingservice.service.BillingService;
@@ -46,6 +47,19 @@ public class AccountController {
             @RequestBody TopUpRequest request) {
         log.info("REST: Top-up {} for userId={}", request.amount(), userId);
         AccountResponse response = billingService.topUp(userId, request.amount(), request.description());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /accounts/{userId}/charge
+     * Synchronous charge (debit) of the user's account for purchases (passes/subscriptions).
+     */
+    @PostMapping("/{userId}/charge")
+    public ResponseEntity<AccountResponse> charge(
+            @PathVariable String userId,
+            @RequestBody ChargeRequest request) {
+        log.info("REST: Charge {} for userId={}", request.amount(), userId);
+        AccountResponse response = billingService.charge(userId, request.amount(), request.description());
         return ResponseEntity.ok(response);
     }
 

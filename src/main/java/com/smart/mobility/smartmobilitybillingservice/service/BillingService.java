@@ -254,4 +254,47 @@ public class BillingService {
                 account.getDailySpent(),
                 account.getCurrency());
     }
+
+    @Transactional
+    public AccountResponse charge(String userId, java.math.BigDecimal amount, String description) {
+        if (amount == null || amount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Charge amount must be positive.");
+        }
+
+        Account account = findAccountByUserId(userId);
+
+        try {
+            // Balance check
+            if (account.getBalance().compareTo(amount) < 0) {
+                throw new com.smart.mobility.smartmobilitybillingservice.exception.InsufficientBalanceException(account.getBalance(), amount);
+            }
+
+            // Daily cap logic
+            java.math.BigDecimal remaining = dailyCap.subtract(account.getDailySpent());
+            if (remaining.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                throw new com.smart.mobility.smartmobilitybillingservice.exception.DailyCapExceededException();
+            }
+            if (account.getDailySpent().add(amount).compareTo(dailyCap) > 0) {
+                // Trim the amount to remaining daily cap
+                amount = remaining;
+            }
+
+            // Debit
+            account.setBalance(account.getBalance().subtract(amount));
+            account.setDailySpent(account.getDailySpent().add(amount));
+            account = accountRepository.save(account);
+
+            saveTransaction(account.getId(), null, amount, TransactionType.DEBIT,
+                    TransactionStatus.SUCCESS, description != null ? description : "Purchase charge");
+
+            // Optionally publish events if needed (omitted here)
+            log.info("Charge of {} for userId={} succeeded. Remaining balance={}", amount, userId, account.getBalance());
+            return toResponse(account);
+        } catch (com.smart.mobility.smartmobilitybillingservice.exception.InsufficientBalanceException | com.smart.mobility.smartmobilitybillingservice.exception.DailyCapExceededException ex) {
+            log.warn("Charge failed for userId={}: {}", userId, ex.getMessage());
+            saveTransaction(account.getId(), null, amount, TransactionType.DEBIT,
+                    TransactionStatus.FAILED, ex.getMessage());
+            throw ex;
+        }
+    }
 }
