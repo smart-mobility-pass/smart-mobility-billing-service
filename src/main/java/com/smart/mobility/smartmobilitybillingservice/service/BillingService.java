@@ -269,28 +269,19 @@ public class BillingService {
                 throw new com.smart.mobility.smartmobilitybillingservice.exception.InsufficientBalanceException(account.getBalance(), amount);
             }
 
-            // Daily cap logic
-            java.math.BigDecimal remaining = dailyCap.subtract(account.getDailySpent());
-            if (remaining.compareTo(java.math.BigDecimal.ZERO) <= 0) {
-                throw new com.smart.mobility.smartmobilitybillingservice.exception.DailyCapExceededException();
-            }
-            if (account.getDailySpent().add(amount).compareTo(dailyCap) > 0) {
-                // Trim the amount to remaining daily cap
-                amount = remaining;
-            }
+            // NOTE: Purchases (passes/subscriptions) should NOT count towards the dailySpent/daily cap.
+            // Therefore we DO NOT apply daily cap logic here and we DO NOT increment dailySpent.
 
-            // Debit
+            // Debit (only update balance)
             account.setBalance(account.getBalance().subtract(amount));
-            account.setDailySpent(account.getDailySpent().add(amount));
             account = accountRepository.save(account);
 
             saveTransaction(account.getId(), null, amount, TransactionType.DEBIT,
                     TransactionStatus.SUCCESS, description != null ? description : "Purchase charge");
 
-            // Optionally publish events if needed (omitted here)
             log.info("Charge of {} for userId={} succeeded. Remaining balance={}", amount, userId, account.getBalance());
             return toResponse(account);
-        } catch (com.smart.mobility.smartmobilitybillingservice.exception.InsufficientBalanceException | com.smart.mobility.smartmobilitybillingservice.exception.DailyCapExceededException ex) {
+        } catch (InsufficientBalanceException ex) {
             log.warn("Charge failed for userId={}: {}", userId, ex.getMessage());
             saveTransaction(account.getId(), null, amount, TransactionType.DEBIT,
                     TransactionStatus.FAILED, ex.getMessage());
